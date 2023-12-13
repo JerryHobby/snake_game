@@ -1,5 +1,8 @@
-use crate::identification::Id;
+use crate::person::identification::Id;
 use serde::{Deserialize, Serialize};
+
+// Include the identification and person modules
+pub mod identification;
 
 /// The `Person` struct represents a person.
 /// It contains an identification document (`Id`), first name, last name, and age.
@@ -46,11 +49,10 @@ impl Person {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::identification::{Id, License, Passport};
+    use identification::{Id, License, Passport};
 
     #[test]
     fn test_person_full_name() {

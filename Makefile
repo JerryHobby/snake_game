@@ -5,9 +5,7 @@ help: ## Show this help
 	@echo "Usage: make [target]"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-all: $(objects) ## Build all objects
-	@echo "Building all objects"
-	@cargo build
+all: fmt test docs-batch run ## Build all objects
 
 clean: ## Remove all generated files
 	@echo "Remove all generated files"
@@ -16,8 +14,11 @@ clean: ## Remove all generated files
 docs: ## Generate documentation
 	@cargo doc --no-deps --open
 
+docs-batch: ## Generate documentation
+	@cargo doc --no-deps
+
 run: ## Run the program
-	@cargo run -- -d : -c 1 -f sample_resplit.txt
+	@cargo run
 
 build: ## Build the program
 	@cargo build

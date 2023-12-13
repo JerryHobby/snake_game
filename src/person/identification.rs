@@ -109,10 +109,10 @@ impl Id {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::person::identification::License;
     use chrono::Utc;
 
     #[test]
@@ -123,7 +123,11 @@ mod tests {
 
     #[test]
     fn test_passport_expired() {
-        let passport = Passport::new("US", "999AE1234", &Utc::now().format("%Y-%m-%d").to_string());
+        let passport = Passport::new(
+            "US",
+            "999AE1234",
+            &Utc::now().format("%Y-%m-%d").to_string(),
+        );
         assert_eq!(passport.expired(), false);
     }
 

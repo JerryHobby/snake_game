@@ -1,10 +1,8 @@
 // Import the necessary modules and structs
 
-use identification::{Id, License, Passport};
+use person::identification::{Id, License, Passport};
 use person::Person;
 
-// Include the identification and person modules
-mod identification;
 mod person;
 
 /// The main function of the program.
