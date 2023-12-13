@@ -1,8 +1,7 @@
 name: Build and test on jerryhobby.com
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch
 
 jobs:
   build:
