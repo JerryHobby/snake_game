@@ -1,4 +1,4 @@
-name: Build and test on jerryhobby.com
+name: Build and test on jerryhobby.com (manual)
 
 on:
   workflow_dispatch

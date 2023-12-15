@@ -1,4 +1,4 @@
-name: Build and test on ubuntu(manual)
+name: Build and test on ubuntu (manual)
 
 on:
   workflow_dispatch
