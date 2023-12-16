@@ -5,14 +5,14 @@ mod snake;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-struct SnakeCell(
-    usize
-);
+struct SnakeCell(usize);
 
+#[allow(dead_code)]
 struct Snake {
     body: Vec<SnakeCell>,
 }
 
+#[allow(dead_code)]
 impl Snake {
     pub fn new(spawn_idx: usize) -> Snake {
         Snake {
@@ -21,22 +21,21 @@ impl Snake {
     }
 }
 
-
+#[allow(dead_code)]
 #[wasm_bindgen]
 struct World {
     width: usize,
     size: usize,
     snake: Snake,
-
     //(WORLD_WIDTH, CELL_SIZE, GRID_COLOR, SNAKE_COLOR, FOOD_COLOR);
 }
 
-
+#[allow(dead_code)]
 #[wasm_bindgen]
 impl World {
     pub fn new(width: usize, spawn_idx: usize) -> World {
         World {
-            width: width,
+            width,
             size: width * width,
             snake: Snake::new(spawn_idx),
         }
@@ -64,26 +63,34 @@ impl World {
         let bottom_edge = snake_head_idx >= self.size - self.width;
 
         match direction {
-            "left" => if !left_edge {
+            "left" => {
+                if !left_edge {
                     self.snake.body[0].0 -= 1;
                 } else {
                     self.snake.body[0].0 += self.width - 1;
-                },
-            "right" => if !right_edge {
+                }
+            }
+            "right" => {
+                if !right_edge {
                     self.snake.body[0].0 += 1;
                 } else {
                     self.snake.body[0].0 -= self.width - 1;
-                },
-            "up" => if !top_edge {
+                }
+            }
+            "up" => {
+                if !top_edge {
                     self.snake.body[0].0 -= self.width;
                 } else {
                     self.snake.body[0].0 += self.size - self.width;
-                },
-            "down" => if !bottom_edge {
+                }
+            }
+            "down" => {
+                if !bottom_edge {
                     self.snake.body[0].0 += self.width;
                 } else {
                     self.snake.body[0].0 -= self.size - self.width;
-                },
+                }
+            }
             _ => (),
         }
     }
