@@ -14,9 +14,9 @@ struct Snake {
 }
 
 impl Snake {
-    pub fn new(spawn: usize) -> Snake {
+    pub fn new(spawn_idx: usize) -> Snake {
         Snake {
-            body: vec![SnakeCell(spawn)],
+            body: vec![SnakeCell(spawn_idx)],
         }
     }
 }
@@ -34,11 +34,11 @@ struct World {
 
 #[wasm_bindgen]
 impl World {
-    pub fn new(width: usize) -> World {
+    pub fn new(width: usize, spawn_idx: usize) -> World {
         World {
             width: width,
             size: width * width,
-            snake: Snake::new(width / 2 + (width * width) / 2),
+            snake: Snake::new(spawn_idx),
         }
     }
 

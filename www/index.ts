@@ -1,12 +1,21 @@
 import init, {World} from 'snake_game';
 
 init().then( _ => {
-    let game_speed: number = 200;
-    let game_pause: boolean = true;
+    // game engine parameters
     const WORLD_WIDTH: number = 20;
+    const SPAWN_IDX: number = Date.now() % (WORLD_WIDTH * WORLD_WIDTH);
     const CELL_SIZE: number = 30;
+
+    const world: World = World.new(WORLD_WIDTH, SPAWN_IDX);
+    const worldWidth: number = world.width();
+
+    // game interface parameters
     const GRID_COLOR: string = "#d0e8d0";
     const GRID_FILL_COLOR: string = "#f4fcf4";
+
+    let game_pause: boolean = true;
+    let game_fps: number = 4;
+
     const DIRECTION = {
         LEFT: {
             angle: 3 * Math.PI / 2,
@@ -26,24 +35,27 @@ init().then( _ => {
         },
     }
 
-    let direction = DIRECTION.RIGHT;
+    let directionKeys = Object.keys(DIRECTION) as (keyof typeof DIRECTION)[];
+    let direction = DIRECTION[directionKeys[Date.now() % directionKeys.length]];
 
-    const world: World = World.new(WORLD_WIDTH);
-    const worldWidth: number = world.width();
+    let snakeHead: HTMLImageElement = new Image();
+    snakeHead.src = './assets/snake_head.png';
 
+    let snakeBody: HTMLImageElement = new Image();
+    snakeBody.src = './assets/snake_body.png';
+
+    // create canvas
     const canvas: HTMLCanvasElement = document.getElementById("snake-canvas") as HTMLCanvasElement;
     const ctx: CanvasRenderingContext2D = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-    let snake_head_img: HTMLImageElement = new Image();
-    snake_head_img.src = './assets/snake_head.png';
-
-    let snake_body_img: HTMLImageElement = new Image();
-    snake_body_img.src = './assets/snake_body.png';
 
     canvas.height = canvas.width = worldWidth * CELL_SIZE;
     ctx.fillStyle = GRID_COLOR;
 
-    snake_head_img.onload = function () {
+    // draw opening board.
+    snakeHead.onload = function () {
+        paint();
+    }
+    snakeBody.onload = function () {
         paint();
     }
 
@@ -89,12 +101,13 @@ init().then( _ => {
         drawSnake(
             world.snake_head_idx() % worldWidth,
             Math.floor(world.snake_head_idx() / worldWidth),
-            snake_head_img,
+            snakeHead,
             direction.angle,
         );
     }
 
     function update(): void {
+        game_fps += 0.01
         setTimeout(() => {
             if (game_pause) {
                 requestAnimationFrame(update);
@@ -103,7 +116,7 @@ init().then( _ => {
             world.update(direction.label);
             paint();
             requestAnimationFrame(update);
-        }, game_speed);
+        }, 1000 / game_fps);
     }
 
     document.addEventListener('keydown', (event: KeyboardEvent) => {
