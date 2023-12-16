@@ -1,2 +1,2 @@
-import ("./index.js")
-.catch(err => console.error("Error loading ./index.js", err));
+import ("./index")
+.catch(err => console.error("Error loading ./index.ts", err));
