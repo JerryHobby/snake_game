@@ -1,20 +1,67 @@
-import init, {World} from 'snake_game';
+import init, {World} from "snake_game";
 
-init().then( _ => {
+
+declare global {
+    interface Window {
+        my_log: (s: string) => void;
+        startGame: () => void;
+        resetGame: () => void;
+        pauseGame: () => void;
+        isGameOver: () => boolean;
+    }
+}
+
+let game_pause: boolean = true;
+let game_over: boolean = false;
+
+window.startGame = startGame;
+window.resetGame = resetGame;
+window.pauseGame = pauseGame;
+window.isGameOver = isGameOver;
+
+function startGame() {
+    window.my_log("startGame");
+    if(game_over) {
+        window.my_log("Resetting game");
+        resetGame();
+    } else {
+        window.my_log("Resuming game");
+        game_over = false;
+        game_pause = false;
+    }
+}
+
+function pauseGame() {
+    game_pause = true;
+}
+
+function resetGame() {
+    location.reload();
+}
+
+function isGameOver() {
+    return game_over;
+}
+
+window.my_log = function(s: string) {
+    const DEBUG = false;
+    if (DEBUG) {
+        console.log(s);
+    }
+};
+
+init().then(wasm => {
     // game engine parameters
-    const WORLD_WIDTH: number = 20;
+    const WORLD_WIDTH: number = 15;
     const SPAWN_IDX: number = Date.now() % (WORLD_WIDTH * WORLD_WIDTH);
     const CELL_SIZE: number = 30;
-
-    const world: World = World.new(WORLD_WIDTH, SPAWN_IDX);
-    const worldWidth: number = world.width();
+    const MIN_FPS: number = 3;
 
     // game interface parameters
     const GRID_COLOR: string = "#d0e8d0";
     const GRID_FILL_COLOR: string = "#f4fcf4";
 
-    let game_pause: boolean = true;
-    let game_fps: number = 4;
+    let game_fps: number = MIN_FPS;
 
     const DIRECTION = {
         LEFT: {
@@ -35,8 +82,16 @@ init().then( _ => {
         },
     }
 
-    let directionKeys = Object.keys(DIRECTION) as (keyof typeof DIRECTION)[];
-    let direction = DIRECTION[directionKeys[Date.now() % directionKeys.length]];
+    let direction = DIRECTION.RIGHT;
+
+    const world: World = World.new(WORLD_WIDTH, SPAWN_IDX, direction.label);
+
+    // pull data from world
+    const worldWidth: number = world.width();
+    let snakeCellPtr: number;
+    let snakeLength: number;
+    let snakeCells: Uint32Array;
+    loadSnake();
 
     let snakeHead: HTMLImageElement = new Image();
     snakeHead.src = './assets/snake_head.png';
@@ -44,8 +99,12 @@ init().then( _ => {
     let snakeBody: HTMLImageElement = new Image();
     snakeBody.src = './assets/snake_body.png';
 
+    let snakeEgg: HTMLImageElement = new Image();
+    snakeEgg.src = './assets/snake_egg.png';
+
     // create canvas
     const canvas: HTMLCanvasElement = document.getElementById("snake-canvas") as HTMLCanvasElement;
+    const snake_score: HTMLSpanElement = document.getElementById("snake-score") as HTMLSpanElement;
     const ctx: CanvasRenderingContext2D = canvas.getContext("2d") as CanvasRenderingContext2D;
 
     canvas.height = canvas.width = worldWidth * CELL_SIZE;
@@ -57,6 +116,20 @@ init().then( _ => {
     }
     snakeBody.onload = function () {
         paint();
+    }
+    snakeEgg.onload = function () {
+        paint();
+    }
+
+    function loadSnake() {
+        snakeCellPtr = world.snake_cells();
+        snakeLength = world.snake_length();
+
+        snakeCells = new Uint32Array(
+            wasm.memory.buffer,
+            snakeCellPtr,
+            snakeLength
+        );
     }
 
     function drawWorld(): void {
@@ -80,14 +153,33 @@ init().then( _ => {
         ctx.stroke();
     }
 
-    const drawSnake = (x: number, y: number, img: HTMLImageElement, rotationAngle: number): void => {
+    const drawSnake = (): void => {
+        loadSnake();
+
+        // draw body first - so head is always on top
+        snakeCells.forEach((cell, index) => {
+                if (index !== 0) {
+                    const img = snakeBody;
+                    const x = world.getx(cell);
+                    const y = world.gety(cell);
+                    const cellx = x * CELL_SIZE;
+                    const celly = y * CELL_SIZE;
+
+                    ctx.drawImage(img, cellx, celly, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        )
+
+        // draw head
+        const cell = world.snake_head_idx();
+        const rotationAngle = direction.angle;
+        const img = snakeHead;
+        const x = world.getx(cell);
+        const y = world.gety(cell);
+
         // Translate to the center of the image
         ctx.translate((x * CELL_SIZE) + (CELL_SIZE / 2), (y * CELL_SIZE) + (CELL_SIZE / 2));
-
-        // Rotate the canvas
         ctx.rotate(rotationAngle);
-
-        // Draw the image
         ctx.drawImage(img, -CELL_SIZE / 2 + 1, -CELL_SIZE / 2 + 1, CELL_SIZE - 2, CELL_SIZE - 2);
 
         // Rotate the canvas back and move the origin back to top-left corner
@@ -95,28 +187,56 @@ init().then( _ => {
         ctx.translate(-(x * CELL_SIZE) - (CELL_SIZE / 2), -(y * CELL_SIZE) - (CELL_SIZE / 2));
     }
 
+    function draw_reward_cell() {
+        const img = snakeEgg;
+        const cell = world.reward_cell_idx();
+
+        if (cell > worldWidth * worldWidth) {
+            gameOver();
+        }
+
+        const x = world.getx(cell);
+        const y = world.gety(cell);
+        const cellx = x * CELL_SIZE;
+        const celly = y * CELL_SIZE;
+
+        ctx.drawImage(img, cellx, celly, CELL_SIZE, CELL_SIZE);
+    }
+
     function paint(): void {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawWorld();
-        drawSnake(
-            world.snake_head_idx() % worldWidth,
-            Math.floor(world.snake_head_idx() / worldWidth),
-            snakeHead,
-            direction.angle,
-        );
+        drawSnake();
+        draw_reward_cell();
     }
 
     function update(): void {
-        game_fps += 0.01
+        if (world.game_over()) {
+            gameOver();
+            return;
+        }
         setTimeout(() => {
             if (game_pause) {
                 requestAnimationFrame(update);
                 return;
             }
+            game_fps = MIN_FPS + Math.floor(world.snake_length() / 10);
+
             world.update(direction.label);
+            snake_score_update();
             paint();
             requestAnimationFrame(update);
         }, 1000 / game_fps);
+    }
+
+    function gameOver() {
+        game_pause = true;
+        game_over = true;
+        alert("Game Over!  Your score is " + snake_score.innerHTML + ".  Press OK to restart.");
+    }
+
+    function snake_score_update() {
+        snake_score.innerHTML = String((world.snake_length() - 3 ) * 200);
     }
 
     document.addEventListener('keydown', (event: KeyboardEvent) => {

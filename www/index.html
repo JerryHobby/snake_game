@@ -11,6 +11,12 @@
 <div id="snake-game" class="content-wrapper">
     <h2>Jerry's WASM/Rust Snake Game</h2>
     <canvas id="snake-canvas"></canvas>
+    <div id="snake-controls">
+        <button id="snake-start" onclick="window.startGame();">Start</button>
+        <button id="snake-pause" onclick="window.pauseGame();">Pause</button>
+        <button id="snake-reset" onclick="window.resetGame();">Reset</button>
+        <div id="score">Score: <span id="snake-score">0</span></div>
+    </div>
 </div>
 <script src="bootstrap.js"></script>
 </body>
