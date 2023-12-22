@@ -5,9 +5,8 @@ help: ## Show this help
 	@echo "Usage: make [target]"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-all: $(objects) ## Build all objects
+all: clean build install ## Build all objects
 	@echo "Building all objects"
-	@cargo build
 
 clean: ## Remove all generated files
 	@echo "Remove all generated files"
@@ -17,7 +16,7 @@ docs: ## Generate documentation
 	@cargo doc --no-deps --open
 
 run: build   ## Run the program
-	@cd www && npm run dev
+	@npm run dev
 
 build: ## Build the program
 	@wasm-pack build --target web

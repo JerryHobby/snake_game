@@ -5,6 +5,6 @@
     "noImplicitAny": true,
     "target": "es5",
     "allowJs": true,
-    "module": "es6",
+    "module": "es6"
   }
 }

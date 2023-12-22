@@ -1,6 +1,5 @@
 import init, {World} from "snake_game";
 
-
 declare global {
     interface Window {
         my_log: (s: string) => void;
