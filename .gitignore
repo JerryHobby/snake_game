@@ -1,4 +1,2 @@
-.env*
-target
-*/target
-
+node_modules
+.env
